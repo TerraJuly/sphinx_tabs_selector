@@ -118,13 +118,11 @@ class CodeTabDirective(GroupTabDirective):
                     f"Lexer not implemented: {self.arguments[0]}"
                 ) from invalid_lexer_error
 
-
-        # All content parsed as code
+        # All content parsed as code, so this code-tab directive should contain only code
         code_block = CodeBlock.run(self)
 
         # Reset to generate tab node
         self.content.data = [tab_name, ""]
-        self.content.items = [(None, 0), (None, 1)]
 
         node = super().run()
         if len(node):
