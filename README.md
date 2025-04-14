@@ -1,14 +1,18 @@
 # sphinx_tabs_selector
-基于sphinx_tabs插件创建，支持sphinx所支持的格式。由于tabs在html展示，可以通过点击tab切换，但是生成某些特定格式，不支持这种切换。
-例如，生成pdf。而本插件，就是用于选择指定的sphinx tab的内容，便于sphinx生成非html格式的内容。
 
-## 安装
+This plugin is created based on the `sphinx_tabs` plugin and supports all formats supported by `sphinx_tabs`. 
+In HTML displays, tabs can be switched by clicking. However, this switching functionality is not supported 
+when generating certain specific formats, such as PDF. This plugin is designed to select the content of specified 
+Sphinx tabs, facilitating Sphinx to generate non - HTML format content.
+
+## Installation
 ```bash
 pip install sphinx-tabs-selector
 ```
-## 使用
 
-在conf.py中添加以下配置
+## Usage
+
+Add the following configuration to `conf.py`:
 ```python
 extensions = [
     ...
@@ -16,13 +20,17 @@ extensions = [
     ... 
 ]
 
-# 这里用来配置，需要选择的tabs，如果不配置该项，该插件将不起作用
-# 配置项为一个列表，列表中的每个元素为一个字符串，字符串为需要选择的tab的名称，如果涉及到的tab是嵌套的，则需要将一路嵌套下来的tab名，都写上
+# This is used to configure the tabs to be selected. If this item is not configured, the plugin will not work.
+# The configuration item is a list. Each element in the list is a string, which is the name of the tab to be selected. 
+# If the tab is nested, you need to write down all the names of the tabs in the nesting path.
 tabs_selector = ["tab1_name","tab2_name","tab3_name"]
 ```
-在rst文件中tabs的写法可以参照sphinx_tabs插件的说明。
 
-## 注意
-1. 必须在conf.py中添加tabs_selector配置，否则插件不会生效。因此,可以使用tabs_selector配置来控制插件的生效。
-2. 如果conf.py的extensions中同时添加了sphinx_tabs插件和sphinx_tabs_selector插件，那么sphinx_tabs_selector插件想起作用的话,必须加在sphinx_tabs之后。
-3. 如果conf.py中没有添加sphinx_tabs插件，sphinx_tabs_selector插件也是单独可以使用的。
+For the way of writing tabs in RST files, you can refer to the documentation of the `sphinx_tabs` plugin.
+
+## Notes
+1. You must add the `tabs_selector` configuration to `conf.py`; otherwise, the plugin will not take effect. 
+   Therefore, you can use the `tabs_selector` configuration to control the activation of the plugin.
+2. If both the `sphinx_tabs` plugin and the `sphinx_tabs_selector` plugin are added to the `extensions` in `conf.py`, 
+   for the `sphinx_tabs_selector` plugin to work, it must be added after `sphinx_tabs`.
+3. The `sphinx_tabs_selector` plugin can be used independently even if the `sphinx_tabs` plugin is not added to `conf.py`. 
