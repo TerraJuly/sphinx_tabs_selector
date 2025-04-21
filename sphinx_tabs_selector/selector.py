@@ -341,7 +341,7 @@ def update_context(app, pagename, templatename, context, doctree):
 # Below is added to flat tabs
 
 FLAT_CSS_FILES = [
-    "tabs_selector.css",
+    "selector.css",
 ]
 
 
