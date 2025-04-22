@@ -341,7 +341,7 @@ def update_context(app, pagename, templatename, context, doctree):
 # Below is added to flat tabs
 
 FLAT_CSS_FILES = [
-    "selector.css",
+    "tabs_selector.css",
 ]
 
 
@@ -509,10 +509,6 @@ def flat_update_context(app, pagename, templatename, context, doctree):
 def setup(app):
     """Set up the plugin"""
     # add config
-    app.add_config_value("sphinx_tabs_valid_builders", [], "")
-    app.add_config_value("sphinx_tabs_disable_css_loading", False, "html", [bool])
-    app.add_config_value("sphinx_tabs_disable_tab_closing", False, "html", [bool])
-
     app.add_config_value("tabs_include", [], "")
     app.add_config_value("tabs_exclude", [], "")
     app.add_config_value("tabs_flat", False, "", [bool])
@@ -536,6 +532,12 @@ def setup(app):
         app.connect("html-page-context", flat_update_context)
     else:
         # switch tabs
+        if not hasattr(app.config, "sphinx_tabs_valid_builders"):
+            app.add_config_value("sphinx_tabs_valid_builders", [], "")
+        if not hasattr(app.config, "sphinx_tabs_disable_css_loading"):
+            app.add_config_value("sphinx_tabs_disable_css_loading", False, "html", [bool])
+        if not hasattr(app.config, "sphinx_tabs_disable_tab_closing"):
+            app.add_config_value("sphinx_tabs_disable_tab_closing", False, "html", [bool])
         app.add_node(SphinxTabsContainer, html=(visit, depart))
         app.add_node(SphinxTabsPanel, html=(visit, depart))
         app.add_node(SphinxTabsTab, html=(visit, depart))
