@@ -10,6 +10,9 @@ This plugin is created based on the `sphinx_tabs` plugin and supports all format
    select multiple tabs. For example:
     - `tabs_include = ["tab1_*", "tab2_*", "tab3_*"]` will select all tabs that start with `tab1_`, `tab2_`, `tab3_`.
     - `tabs_exclude = ["tab4_*", "tab5_*", "tab6_*"]` to exclude all tabs that start with `tab4_`, `tab5_`, `tab6_`.
+4. When `tabs_flat` is set to `True`, and builder is `latex`, the tabs will be displayed in flat mode, and pdf will show
+   the tab with blue,bold tab name and the tab contents will be surrounded by a box. The non-nested tabs are displayed
+   very well. But the nested tabs are displayed not very well.
 
 ## Installation
 
@@ -66,4 +69,7 @@ plugin.
 3. If both the `sphinx_tabs` plugin and the `sphinx_tabs_selector` plugin are added to the `extensions` in `conf.py`,
    for the `sphinx_tabs_selector` plugin to work, it must be added after `sphinx_tabs`.
 4. The `sphinx_tabs_selector` plugin can be used independently even if the `sphinx_tabs` plugin is not added to
-   `conf.py`. 
+   `conf.py`.
+6. If only set the `sphinx_tabs_selector` plugin in `conf.py` and not set the `sphinx_tabs` plugin, and `tabs_flat` is
+   set to `False` or not set, and not set the `tabs_include` or `tabs_exclude` configuration, the plugin will work as
+   the `sphinx_tabs` plugin with v3.4.7.

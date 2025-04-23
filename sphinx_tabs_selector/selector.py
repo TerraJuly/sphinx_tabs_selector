@@ -1,16 +1,19 @@
+# encoding: utf-8
+
 """
 Partly copied from sphinx-tabs (https://pypi.org/project/sphinx-tabs/3.4.7/) with some modifications:
 - Added support for selecting tabs by name
 - Added support for excluding tabs by name
 - Added support for flat tabs
+- Added support for gen latex with frames for tabs
 """
 
-from fnmatch import fnmatch
 import base64
 from pathlib import Path
 from functools import partial
-import sphinx
+from fnmatch import fnmatch
 
+import sphinx
 from docutils import nodes
 from docutils.parsers.rst import directives
 from pygments.lexers import get_all_lexers
@@ -45,10 +48,6 @@ def get_compatible_builders(app):
     ]
     builders.extend(app.config["sphinx_tabs_valid_builders"])
     return builders
-
-
-class SphinxTabsContainer(nodes.container):
-    tagname = "div"
 
 
 class SphinxTabsPanel(nodes.container):
@@ -341,8 +340,40 @@ def update_context(app, pagename, templatename, context, doctree):
 # Below is added to flat tabs
 
 FLAT_CSS_FILES = [
-    "tabs_selector.css",
+    "selector.css",
 ]
+
+
+def visit_latex_panel(translator, node):
+    translator.body.append(r'''
+    \begin{tcolorbox}[
+        colback=white,
+        colframe=black,
+        arc=2pt,
+        boxsep=0pt,
+        enhanced,
+        breakable=unlimited,
+        ]
+''')
+
+
+def depart_latex_panel(translator, node):
+    translator.body.append(r'''
+    \end{tcolorbox}
+    ''')
+
+
+def visit_latex_tab(translator, node):
+    translator.body.append(r'''
+    \begingroup\color{blue}\bfseries
+    ''')
+
+
+def depart_latex_tab(translator, node):
+    translator.body.append(r'''
+    \newline
+    \endgroup
+    ''')
 
 
 class FlatTabsDirective(SphinxDirective):
@@ -395,10 +426,12 @@ class FlatTabDirective(SphinxDirective):
 
         # Use base docutils classes
 
-        node = nodes.container()
+        node = SphinxTabsPanel()
         node["classes"].append("flatten-sphinx-tabs-tab")
         flatten_tab_title_node = nodes.container()
-        flatten_tab_title_node.append(nodes.Text(tab_title))
+        tab_name = SphinxTabsTab(text=tab_title)
+        tab_name.tagname = "span"
+        flatten_tab_title_node.append(tab_name)
         flatten_tab_title_node["classes"].append("flatten-tab-title")
 
         node.append(flatten_tab_title_node)
@@ -506,13 +539,29 @@ def flat_update_context(app, pagename, templatename, context, doctree):
             app.add_css_file(css)
 
 
+# define latex
+def set_latex_elements(app):
+    latex_preamble = r"""
+    \usepackage{tcolorbox}
+    \tcbuselibrary{breakable,skins}
+    \usepackage{xcolor} 
+    """
+
+    latex_elements = app.config.latex_elements.copy()
+    if 'preamble' in latex_elements:
+        latex_elements['preamble'] += latex_preamble
+    else:
+        latex_elements['preamble'] = latex_preamble
+    app.config.latex_elements = latex_elements
+
+
 def setup(app):
     """Set up the plugin"""
     # add config
     app.add_config_value("tabs_include", [], "")
     app.add_config_value("tabs_exclude", [], "")
-    app.add_config_value("tabs_flat", False, "", [bool])
-    # if not set tabs_select, will not use this plugin override sphinx-tabs.tabs
+    app.add_config_value("tabs_flat", False, "", [bool])  # control flat tabs or not
+    # if not set tabs_include or tabs_include, will not use this plugin
     if not (app.config.tabs_include or app.config.tabs_exclude):
         return
 
@@ -523,12 +572,20 @@ def setup(app):
         (lambda app: app.config.html_static_path.insert(0, static_dir.as_posix())),
     )
 
-    # override the tabs directive from sphinx-tabs.tabs
     if app.config.tabs_flat:
+        set_latex_elements(app)  # set latex elements even if not build latex
         app.add_directive("tabs", FlatTabsDirective, override=True)
         app.add_directive("tab", FlatTabDirective, override=True)
         app.add_directive("group-tab", FlatGroupTabDirective, override=True)
         app.add_directive("code-tab", FlatCodeTabDirective, override=True)
+        app.add_node(SphinxTabsPanel,
+                     html=(visit, depart),
+                     latex=(visit_latex_panel, depart_latex_panel),
+                     override=True)
+        app.add_node(SphinxTabsTab,
+                     html=(visit, depart),
+                     latex=(visit_latex_tab, depart_latex_tab),
+                     override=True)
         app.connect("html-page-context", flat_update_context)
     else:
         # switch tabs
@@ -538,10 +595,9 @@ def setup(app):
             app.add_config_value("sphinx_tabs_disable_css_loading", False, "html", [bool])
         if not hasattr(app.config, "sphinx_tabs_disable_tab_closing"):
             app.add_config_value("sphinx_tabs_disable_tab_closing", False, "html", [bool])
-        app.add_node(SphinxTabsContainer, html=(visit, depart))
-        app.add_node(SphinxTabsPanel, html=(visit, depart))
-        app.add_node(SphinxTabsTab, html=(visit, depart))
-        app.add_node(SphinxTabsTablist, html=(visit, depart))
+        app.add_node(SphinxTabsPanel, html=(visit, depart), override=True)
+        app.add_node(SphinxTabsTab, html=(visit, depart), override=True)
+        app.add_node(SphinxTabsTablist, html=(visit, depart), override=True)
         app.add_directive("tabs", TabsDirective, override=True)
         app.add_directive("tab", TabDirective, override=True)
         app.add_directive("group-tab", GroupTabDirective, override=True)
