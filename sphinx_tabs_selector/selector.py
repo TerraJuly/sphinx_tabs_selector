@@ -563,46 +563,46 @@ def setup(app):
     app.add_config_value("tabs_flat", False, "", [bool])  # control flat tabs or not
     # if not set tabs_include or tabs_include, will not use this plugin
     if not (app.config.tabs_include or app.config.tabs_exclude):
-        return
-
-    # set static dir
-    static_dir = Path(__file__).parent / "static"
-    app.connect(
-        "builder-inited",
-        (lambda app: app.config.html_static_path.insert(0, static_dir.as_posix())),
-    )
-
-    if app.config.tabs_flat:
-        set_latex_elements(app)  # set latex elements even if not build latex
-        app.add_directive("tabs", FlatTabsDirective, override=True)
-        app.add_directive("tab", FlatTabDirective, override=True)
-        app.add_directive("group-tab", FlatGroupTabDirective, override=True)
-        app.add_directive("code-tab", FlatCodeTabDirective, override=True)
-        app.add_node(SphinxTabsPanel,
-                     html=(visit, depart),
-                     latex=(visit_latex_panel, depart_latex_panel),
-                     override=True)
-        app.add_node(SphinxTabsTab,
-                     html=(visit, depart),
-                     latex=(visit_latex_tab, depart_latex_tab),
-                     override=True)
-        app.connect("html-page-context", flat_update_context)
+        pass
     else:
-        # switch tabs
-        if not hasattr(app.config, "sphinx_tabs_valid_builders"):
-            app.add_config_value("sphinx_tabs_valid_builders", [], "")
-        if not hasattr(app.config, "sphinx_tabs_disable_css_loading"):
-            app.add_config_value("sphinx_tabs_disable_css_loading", False, "html", [bool])
-        if not hasattr(app.config, "sphinx_tabs_disable_tab_closing"):
-            app.add_config_value("sphinx_tabs_disable_tab_closing", False, "html", [bool])
-        app.add_node(SphinxTabsPanel, html=(visit, depart), override=True)
-        app.add_node(SphinxTabsTab, html=(visit, depart), override=True)
-        app.add_node(SphinxTabsTablist, html=(visit, depart), override=True)
-        app.add_directive("tabs", TabsDirective, override=True)
-        app.add_directive("tab", TabDirective, override=True)
-        app.add_directive("group-tab", GroupTabDirective, override=True)
-        app.add_directive("code-tab", CodeTabDirective, override=True)
-        app.connect("html-page-context", update_context)
+        # set static dir
+        static_dir = Path(__file__).parent / "static"
+        app.connect(
+            "builder-inited",
+            (lambda app: app.config.html_static_path.insert(0, static_dir.as_posix())),
+        )
+
+        if app.config.tabs_flat:
+            set_latex_elements(app)  # set latex elements even if not build latex
+            app.add_directive("tabs", FlatTabsDirective, override=True)
+            app.add_directive("tab", FlatTabDirective, override=True)
+            app.add_directive("group-tab", FlatGroupTabDirective, override=True)
+            app.add_directive("code-tab", FlatCodeTabDirective, override=True)
+            app.add_node(SphinxTabsPanel,
+                         html=(visit, depart),
+                         latex=(visit_latex_panel, depart_latex_panel),
+                         override=True)
+            app.add_node(SphinxTabsTab,
+                         html=(visit, depart),
+                         latex=(visit_latex_tab, depart_latex_tab),
+                         override=True)
+            app.connect("html-page-context", flat_update_context)
+        else:
+            # switch tabs
+            if not hasattr(app.config, "sphinx_tabs_valid_builders"):
+                app.add_config_value("sphinx_tabs_valid_builders", [], "")
+            if not hasattr(app.config, "sphinx_tabs_disable_css_loading"):
+                app.add_config_value("sphinx_tabs_disable_css_loading", False, "html", [bool])
+            if not hasattr(app.config, "sphinx_tabs_disable_tab_closing"):
+                app.add_config_value("sphinx_tabs_disable_tab_closing", False, "html", [bool])
+            app.add_node(SphinxTabsPanel, html=(visit, depart), override=True)
+            app.add_node(SphinxTabsTab, html=(visit, depart), override=True)
+            app.add_node(SphinxTabsTablist, html=(visit, depart), override=True)
+            app.add_directive("tabs", TabsDirective, override=True)
+            app.add_directive("tab", TabDirective, override=True)
+            app.add_directive("group-tab", GroupTabDirective, override=True)
+            app.add_directive("code-tab", CodeTabDirective, override=True)
+            app.connect("html-page-context", update_context)
 
     return {
         "parallel_read_safe": True,
