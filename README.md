@@ -2,7 +2,7 @@
 
 This plugin is created based on the `sphinx_tabs` plugin and supports all formats supported by `sphinx_tabs` v3.4.7.
 
-##Features
+## Features
 
 1. Supports all formats supported by `sphinx_tabs` with v3.4.7.
 2. Supports showing tabs in switching mode or flat mode.
