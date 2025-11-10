@@ -345,35 +345,21 @@ FLAT_CSS_FILES = [
 
 
 def visit_latex_panel(translator, node):
-    translator.body.append(r'''
-    \begin{tcolorbox}[
-        colback=white,
-        colframe=black,
-        arc=2pt,
-        boxsep=0pt,
-        enhanced,
-        breakable=unlimited,
-        ]
-''')
+    translator.body.append(r'\begin{quote}')
 
 
 def depart_latex_panel(translator, node):
-    translator.body.append(r'''
-    \end{tcolorbox}
-    ''')
+    translator.body.append(r'\end{quote}')
 
 
 def visit_latex_tab(translator, node):
     translator.body.append(r'''
-    \begingroup\color{blue}\bfseries
+    \paragraph{\textcolor{blue}{
     ''')
 
 
 def depart_latex_tab(translator, node):
-    translator.body.append(r'''
-    \newline
-    \endgroup
-    ''')
+    translator.body.append(r'}}')
 
 
 class FlatTabsDirective(SphinxDirective):
