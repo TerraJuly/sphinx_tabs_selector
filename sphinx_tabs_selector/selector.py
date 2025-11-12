@@ -354,7 +354,7 @@ def depart_latex_panel(translator, node):
 
 def visit_latex_tab(translator, node):
     translator.body.append(r'''
-    \paragraph{\textcolor{blue}{
+    \paragraph*{\textcolor{blue}{
     ''')
 
 
