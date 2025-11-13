@@ -385,6 +385,22 @@ class FlatTabDirective(SphinxDirective):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def modify_child_nodes(self, node, replace_dict):
+        """递归修改节点的子节点文本内容"""
+        # 遍历所有子节点
+        for child in node.children[:]:  # 用切片避免修改时迭代出错
+            # 如果是文本节点，直接替换内容
+            if isinstance(child, nodes.Text):
+                new_text = child.astext()
+                for old, new in replace_dict.items():
+                    new_text = new_text.replace(old, str(new))
+                if new_text != child.astext():
+                    # 替换原文本节点
+                    node.replace(child, nodes.Text(new_text))
+            # 如果是容器节点（如段落、代码块），递归处理
+            elif hasattr(child, 'children'):
+                self.modify_child_nodes(child, replace_dict)
+
     def run(self):
         """Parse a tab directive"""
         self.assert_has_content()
@@ -422,6 +438,16 @@ class FlatTabDirective(SphinxDirective):
 
         node.append(flatten_tab_title_node)
         self.state.nested_parse(self.content[1:], self.content_offset, node)
+
+        # replace
+        if self.env.config.tabs_replace_dict:
+            tab_replace_dict = self.env.config.tabs_replace_dict.get(tab_title, {})
+            if tab_replace_dict:
+                keys = list(tab_replace_dict.keys())
+                # sort by key length
+                keys.sort(key=lambda x: len(x), reverse=True)
+                replace_dict = {key: tab_replace_dict[key] for key in keys}
+                self.modify_child_nodes(node, replace_dict)
 
         return [node]
 
@@ -547,6 +573,7 @@ def setup(app):
     app.add_config_value("tabs_include", [], "")
     app.add_config_value("tabs_exclude", [], "")
     app.add_config_value("tabs_flat", False, "", [bool])  # control flat tabs or not
+    app.add_config_value("tabs_replace_dict", {}, "")
     # if not set tabs_include or tabs_include, will not use this plugin
     if not (app.config.tabs_include or app.config.tabs_exclude):
         pass

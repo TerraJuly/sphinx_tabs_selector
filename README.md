@@ -13,6 +13,8 @@ This plugin is created based on the `sphinx_tabs` plugin and supports all format
 4. When `tabs_flat` is set to `True`, and builder is `latex`, the tabs will be displayed in flat mode, and pdf will show
    the tab with blue,bold tab name and the tab contents will be surrounded by a box. The non-nested tabs are displayed
    very well. But the nested tabs are displayed not very well.
+5. Supports replace `strings` in tab contents by set `tabs_replace_dict`. This only effect on flat mode.
+
 
 ## Installation
 
@@ -43,6 +45,11 @@ tabs_exclude = ["tab4_name", "tab5_name", "tab6_*"]
 # default is False. If True, the tabs will be displayed in flat mode. Otherwise, the tabs will be displayed in switching mode.
 tabs_flat = True
 
+tabs_replace_dict = {
+    "tab1":{
+        "key1":"value1"
+    }
+}
 ```
 
 For the way of writing tabs in RST files, you can refer to the documentation of
