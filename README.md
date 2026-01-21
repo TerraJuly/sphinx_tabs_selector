@@ -80,3 +80,4 @@ plugin.
 6. If only set the `sphinx_tabs_selector` plugin in `conf.py` and not set the `sphinx_tabs` plugin, and `tabs_flat` is
    set to `False` or not set, and not set the `tabs_include` or `tabs_exclude` configuration, the plugin will work as
    the `sphinx_tabs` plugin with v3.4.7.
+7. If one `tabs` has no content, it will not be displayed. (updated in v1.0.12)
