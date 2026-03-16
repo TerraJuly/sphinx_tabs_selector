@@ -345,21 +345,35 @@ FLAT_CSS_FILES = [
 
 
 def visit_latex_panel(translator, node):
-    translator.body.append(r'\begin{quote}')
-
+    """LaTeX 面板访问函数：从节点属性获取标题，无需依赖标题节点"""
+    # 从节点属性中获取提前存储的 tab 标题
+    tab_title = node.get("tab_title", "")
+    not_display_list = translator.builder.config.not_display_title_tabs or []
+    if tab_title not in not_display_list:
+        translator.body.append(r'\begin{quote}')
 
 def depart_latex_panel(translator, node):
-    translator.body.append(r'\end{quote}')
-
+    tab_title = node.get("tab_title", "")
+    not_display_list = translator.builder.config.not_display_title_tabs or []
+    if tab_title not in not_display_list:
+        translator.body.append(r'\end{quote}')
 
 def visit_latex_tab(translator, node):
-    translator.body.append(r'''
-    \paragraph*{\textcolor{blue}{
-    ''')
-
+    """LaTeX 标签访问函数：优先从节点属性取标题，兼容旧逻辑"""
+    # 方式1：如果是标题节点，直接取文本；方式2：从父节点属性取
+    tab_title = node.astext() if node.astext() else node.parent.get("tab_title", "")
+    not_display_list = translator.builder.config.not_display_title_tabs or []
+    if tab_title not in not_display_list:
+        translator.body.append(r'''
+        \paragraph*{\textcolor{blue}{
+        ''')
 
 def depart_latex_tab(translator, node):
-    translator.body.append(r'}}')
+    tab_title = node.astext() if node.astext() else node.parent.get("tab_title", "")
+    not_display_list = translator.builder.config.not_display_title_tabs or []
+    if tab_title not in not_display_list:
+        translator.body.append(r'}}')
+
 
 
 class FlatTabsDirective(SphinxDirective):
@@ -406,12 +420,11 @@ class FlatTabDirective(SphinxDirective):
         self.assert_has_content()
 
         tab_name = SphinxTabsTab()
-        # tab_name["classes"].extend(sorted(self.tab_classes))
         self.state.nested_parse(self.content[0:1], 0, tab_name)
         # Remove the paragraph node that is created by nested_parse
         tab_name.children[0].replace_self(tab_name.children[0].children)
 
-        tab_title = tab_name.children[0].astext()
+        tab_title = tab_name.children[0].astext() if tab_name.children else ""
 
         # first judge include
         if self.env.config.tabs_include:
@@ -430,13 +443,18 @@ class FlatTabDirective(SphinxDirective):
 
         node = SphinxTabsPanel()
         node["classes"].append("flatten-sphinx-tabs-tab")
-        flatten_tab_title_node = nodes.container()
-        tab_name = SphinxTabsTab(text=tab_title)
-        tab_name.tagname = "span"
-        flatten_tab_title_node.append(tab_name)
-        flatten_tab_title_node["classes"].append("flatten-tab-title")
+        node["tab_title"] = tab_title  # 把标题存到节点的自定义属性中
 
-        node.append(flatten_tab_title_node)
+        not_display_list = self.env.config.not_display_title_tabs or []
+        if tab_title not in not_display_list:
+            flatten_tab_title_node = nodes.container()
+            tab_name_span = SphinxTabsTab(text=tab_title)
+            tab_name_span.tagname = "span"
+            flatten_tab_title_node.append(tab_name_span)
+            flatten_tab_title_node["classes"].append("flatten-tab-title")
+            node.append(flatten_tab_title_node)
+
+
         self.state.nested_parse(self.content[1:], self.content_offset, node)
 
         # replace
@@ -574,6 +592,7 @@ def setup(app):
     app.add_config_value("tabs_exclude", [], "")
     app.add_config_value("tabs_flat", False, "", [bool])  # control flat tabs or not
     app.add_config_value("tabs_replace_dict", {}, "")
+    app.add_config_value("not_display_title_tabs",[],"")
     # if not set tabs_include or tabs_include, will not use this plugin
     if not (app.config.tabs_include or app.config.tabs_exclude):
         pass

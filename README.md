@@ -14,6 +14,7 @@ This plugin is created based on the `sphinx_tabs` plugin and supports all format
    the tab with blue,bold tab name and the tab contents will be surrounded by a box. The non-nested tabs are displayed
    very well. But the nested tabs are displayed not very well.
 5. Supports replace `strings` in tab contents by set `tabs_replace_dict`. This only effect on flat mode.
+6. If you don't want to display tab title when gen flat pdf, you can set with `not_display_title_tabs`.
 
 
 ## Installation
