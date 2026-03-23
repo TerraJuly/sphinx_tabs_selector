@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=42", "wheel" , "colorama"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "sphinx-tabs-selector"
-version = "1.0.13"
+version = "1.0.14"
 description = "It is used to extract the specified tabs content from the RST (reStructuredText) document."
 readme = "README.md"
 license = { file = "LICENSE.md" }

@@ -20,6 +20,13 @@ from pygments.lexers import get_all_lexers
 from sphinx.highlighting import lexer_classes
 from sphinx.util.docutils import SphinxDirective
 from sphinx.directives.code import CodeBlock
+from sphinx.util import logging
+from colorama import Fore
+import colorama
+
+colorama.init(autoreset=True)
+
+logger = logging.getLogger(__name__)
 
 JS_FILES = [
     "tabs.js",
@@ -348,32 +355,34 @@ def visit_latex_panel(translator, node):
     """LaTeX 面板访问函数：从节点属性获取标题，无需依赖标题节点"""
     # 从节点属性中获取提前存储的 tab 标题
     tab_title = node.get("tab_title", "")
-    not_display_list = translator.builder.config.not_display_title_tabs or []
+    not_display_list = translator.builder.config.flat_not_display_title_tabs or []
     if tab_title not in not_display_list:
         translator.body.append(r'\begin{quote}')
 
+
 def depart_latex_panel(translator, node):
     tab_title = node.get("tab_title", "")
-    not_display_list = translator.builder.config.not_display_title_tabs or []
+    not_display_list = translator.builder.config.flat_not_display_title_tabs or []
     if tab_title not in not_display_list:
         translator.body.append(r'\end{quote}')
+
 
 def visit_latex_tab(translator, node):
     """LaTeX 标签访问函数：优先从节点属性取标题，兼容旧逻辑"""
     # 方式1：如果是标题节点，直接取文本；方式2：从父节点属性取
     tab_title = node.astext() if node.astext() else node.parent.get("tab_title", "")
-    not_display_list = translator.builder.config.not_display_title_tabs or []
+    not_display_list = translator.builder.config.flat_not_display_title_tabs or []
     if tab_title not in not_display_list:
         translator.body.append(r'''
         \paragraph*{\textcolor{blue}{
         ''')
 
+
 def depart_latex_tab(translator, node):
     tab_title = node.astext() if node.astext() else node.parent.get("tab_title", "")
-    not_display_list = translator.builder.config.not_display_title_tabs or []
+    not_display_list = translator.builder.config.flat_not_display_title_tabs or []
     if tab_title not in not_display_list:
         translator.body.append(r'}}')
-
 
 
 class FlatTabsDirective(SphinxDirective):
@@ -384,9 +393,25 @@ class FlatTabsDirective(SphinxDirective):
     def run(self):
         """Parse a tabs directive"""
         self.assert_has_content()
-
         node = nodes.container(type="tab-element")
         self.state.nested_parse(self.content, self.content_offset, node)
+
+        # 遍历当前 tabs 节点的直接子节点
+        direct_child_tabs_dict = {}
+        for child in node.children:
+            # 条件1：是 FlatTabDirective 生成的 tab 节点（核心标识）
+            is_tab_node = (isinstance(child, nodes.container) and
+                           "flatten-sphinx-tabs-tab" in child.get("classes", []))
+            if is_tab_node:
+                child_title = child.get("tab_title", "")
+                direct_child_tabs_dict[child_title] = child
+
+        if self.env.config.flat_tab_conflict_titles:
+            first, second = self.env.config.flat_tab_conflict_titles
+            # 检查是否同时存在
+            if first in direct_child_tabs_dict and second in direct_child_tabs_dict:
+                logger.info(f"{Fore.GREEN}Conflict found: {first} and {second}, removing {first}")
+                node.children.remove(direct_child_tabs_dict[first])
 
         return [node]
 
@@ -445,7 +470,7 @@ class FlatTabDirective(SphinxDirective):
         node["classes"].append("flatten-sphinx-tabs-tab")
         node["tab_title"] = tab_title  # 把标题存到节点的自定义属性中
 
-        not_display_list = self.env.config.not_display_title_tabs or []
+        not_display_list = self.env.config.flat_not_display_title_tabs or []
         if tab_title not in not_display_list:
             flatten_tab_title_node = nodes.container()
             tab_name_span = SphinxTabsTab(text=tab_title)
@@ -454,12 +479,11 @@ class FlatTabDirective(SphinxDirective):
             flatten_tab_title_node["classes"].append("flatten-tab-title")
             node.append(flatten_tab_title_node)
 
-
         self.state.nested_parse(self.content[1:], self.content_offset, node)
 
         # replace
-        if self.env.config.tabs_replace_dict:
-            tab_replace_dict = self.env.config.tabs_replace_dict.get(tab_title, {})
+        if self.env.config.flat_tabs_replace_dict:
+            tab_replace_dict = self.env.config.flat_tabs_replace_dict.get(tab_title, {})
             if tab_replace_dict:
                 keys = list(tab_replace_dict.keys())
                 # sort by key length
@@ -591,8 +615,27 @@ def setup(app):
     app.add_config_value("tabs_include", [], "")
     app.add_config_value("tabs_exclude", [], "")
     app.add_config_value("tabs_flat", False, "", [bool])  # control flat tabs or not
-    app.add_config_value("tabs_replace_dict", {}, "")
-    app.add_config_value("not_display_title_tabs",[],"")
+    app.add_config_value("flat_tabs_replace_dict", {}, "")  # 根据tab名来替换tab中指定字符串的字典，只对flat起作用
+    app.add_config_value("flat_not_display_title_tabs", [], "")  # 不显示指定的tab的title，只对flat起作用
+    app.add_config_value("flat_tab_conflict_titles", [], "")  # 规则：空列表 或 [标题1, 标题2]，两个标题不能同时出现在同一个tabs中
+
+    if app.config.flat_tab_conflict_titles:
+        if len(app.config.flat_tab_conflict_titles) != 2:
+            logger.error(
+                "[IC_Selector_Plugin] Invalid length for 'flat_tab_conflict_titles' configuration!\n"
+                f"  Current value: {app.config.flat_tab_conflict_titles} (length: {len(app.config.flat_tab_conflict_titles)})\n"
+                "  Requirement: The list must contain exactly 2 tab titles (or be empty)\n"
+                "  Valid example: flat_tab_conflict_titles = ['Old Version', 'New Version'] or flat_tab_conflict_titles = []"
+            )
+        else:
+            if len(set(app.config.flat_tab_conflict_titles)) == 1:
+                logger.error(
+                    "[IC_Selector_Plugin] Duplicate titles in 'flat_tab_conflict_titles' configuration!\n"
+                    f"  Current value: {app.config.flat_tab_conflict_titles}\n"
+                    "  Requirement: The two tab titles must be different (mutually exclusive rule)\n"
+                    "  Valid example: flat_tab_conflict_titles = ['Python2', 'Python3']"
+                )
+
     # if not set tabs_include or tabs_include, will not use this plugin
     if not (app.config.tabs_include or app.config.tabs_exclude):
         pass

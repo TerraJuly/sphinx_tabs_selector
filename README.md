@@ -13,8 +13,9 @@ This plugin is created based on the `sphinx_tabs` plugin and supports all format
 4. When `tabs_flat` is set to `True`, and builder is `latex`, the tabs will be displayed in flat mode, and pdf will show
    the tab with blue,bold tab name and the tab contents will be surrounded by a box. The non-nested tabs are displayed
    very well. But the nested tabs are displayed not very well.
-5. Supports replace `strings` in tab contents by set `tabs_replace_dict`. This only effect on flat mode.
-6. If you don't want to display tab title when gen flat pdf, you can set with `not_display_title_tabs`.
+5. Supports replace `strings` in tab contents by set `flat_tabs_replace_dict`. This only effect on flat mode.
+6. If you don't want to display tab title when gen flat pdf, you can set with `flat_not_display_title_tabs`. This only effect on flat mode.
+7. If you want to replace one tab by another tab in one tabs, you can set with `flat_tab_conflict_titles`. This only effect on flat mode.
 
 
 ## Installation
