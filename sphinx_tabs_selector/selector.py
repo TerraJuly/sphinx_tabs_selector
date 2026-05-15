@@ -72,11 +72,11 @@ class SphinxTabsTablist(nodes.container):
 def visit(translator, node):
     # Borrowed from `sphinx-inline-tabs`
     attrs = node.attributes.copy()
-    attrs.pop("classes")
-    attrs.pop("ids")
-    attrs.pop("names")
-    attrs.pop("dupnames")
-    attrs.pop("backrefs")
+    attrs.pop("classes",None)
+    attrs.pop("ids",None)
+    attrs.pop("names",None)
+    attrs.pop("dupnames",None)
+    attrs.pop("backrefs",None)
     text = translator.starttag(node, node.tagname, **attrs)
     translator.body.append(text.strip())
 
